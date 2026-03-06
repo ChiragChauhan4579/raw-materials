@@ -2,4 +2,4 @@ pandas
 pulp
 openpyxl
 streamlit
-altair
+altair<5
