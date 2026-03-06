@@ -2,5 +2,5 @@ pandas
 pulp
 openpyxl
 streamlit
-altair<5
+altair==4.2.2
 polars
