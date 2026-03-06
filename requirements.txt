@@ -3,3 +3,4 @@ pulp
 openpyxl
 streamlit
 altair<5
+imghdr
