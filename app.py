@@ -15,16 +15,16 @@ def create_sample_data():
         "Fibre": [0.001,0.005,0.003,0.10,0.15,0.028,0.085],
         "Salt": [0.002,0.005,0.007,0.002,0.008,0.000,0.001],
         "Sugar": [0.000,0.000,0.000,0.000,0.000,0.045,0.047],
-    })
+    }).with_columns(pl.all().cast(pl.Utf8))
 
     costs = {
-        "Chicken":0.095,
-        "Beef":0.150,
-        "Mutton":0.100,
-        "Rice":0.002,
-        "Wheat bran":0.005,
-        "Corn":0.012,
-        "Peanuts":0.013
+        "Chicken":"0.095",
+        "Beef":"0.150",
+        "Mutton":"0.100",
+        "Rice":"0.002",
+        "Wheat bran":"0.005",
+        "Corn":"0.012",
+        "Peanuts":"0.013"
     }
 
     return nutrition, costs
@@ -41,14 +41,14 @@ def optimize_recipe(nutrition, dict_costs, bar_weight, constraints):
 
     x = LpVariable.dicts("qty", ingredients, lowBound=0)
 
-    model += lpSum([dict_costs[i] * x[i] for i in ingredients])
+    model += lpSum([float(dict_costs[i]) * x[i] for i in ingredients])
 
     model += lpSum([x[i] for i in ingredients]) == bar_weight
 
     for nutrient,(op,limit) in constraints.items():
 
         nutrient_values = {
-            row["Ingredient"]:row[nutrient]
+            row["Ingredient"]:float(row[nutrient])
             for row in nutrition.to_dicts()
         }
 
@@ -90,9 +90,9 @@ cost_file = st.sidebar.file_uploader("Upload Cost Excel",type=["xlsx"])
 
 if nutrition_file and cost_file:
 
-    nutrition = pl.read_excel(nutrition_file)
+    nutrition = pl.read_excel(nutrition_file).with_columns(pl.all().cast(pl.Utf8))
 
-    costs_df = pl.read_excel(cost_file)
+    costs_df = pl.read_excel(cost_file).with_columns(pl.all().cast(pl.Utf8))
 
     dict_costs = dict(
         zip(
@@ -118,7 +118,7 @@ st.dataframe(nutrition)
 cost_df = pl.DataFrame({
     "Ingredient":list(dict_costs.keys()),
     "Cost":list(dict_costs.values())
-})
+}).with_columns(pl.all().cast(pl.Utf8))
 
 st.subheader("Ingredient Costs ($/gram)")
 st.dataframe(cost_df)
@@ -177,12 +177,12 @@ if st.button("Run Optimization"):
             if qty and qty > 0.01:
 
                 results.append({
-                    "Ingredient":ing,
-                    "Quantity (g)":round(qty,2),
-                    "Cost":round(qty*dict_costs[ing],4)
+                    "Ingredient":str(ing),
+                    "Quantity (g)":str(round(qty,2)),
+                    "Cost":str(round(qty*float(dict_costs[ing]),4))
                 })
 
-        results_df = pl.DataFrame(results)
+        results_df = pl.DataFrame(results).with_columns(pl.all().cast(pl.Utf8))
 
         st.subheader("Optimal Recipe")
         st.dataframe(results_df)
@@ -199,14 +199,14 @@ if st.button("Run Optimization"):
 
                 ing = row["Ingredient"]
 
-                total += (x[ing].varValue or 0) * row[nutrient]
+                total += (x[ing].varValue or 0) * float(row[nutrient])
 
-            nutrition_totals[nutrient] = round(total,2)
+            nutrition_totals[nutrient] = str(round(total,2))
 
         nutrition_df = pl.DataFrame({
             "Nutrient":list(nutrition_totals.keys()),
             "Total (g)":list(nutrition_totals.values())
-        })
+        }).with_columns(pl.all().cast(pl.Utf8))
 
         st.subheader("Nutritional Profile")
         st.dataframe(nutrition_df)
@@ -240,11 +240,11 @@ if st.button("Run Sensitivity Analysis"):
         cost = value(model.objective) if model.status == 1 else None
 
         results.append({
-            "Protein Requirement":p,
-            "Cost":cost,
-            "Status":status
+            "Protein Requirement":str(p),
+            "Cost":str(cost),
+            "Status":str(status)
         })
 
-    sensitivity_df = pl.DataFrame(results)
+    sensitivity_df = pl.DataFrame(results).with_columns(pl.all().cast(pl.Utf8))
 
     st.dataframe(sensitivity_df)
