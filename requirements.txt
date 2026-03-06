@@ -3,4 +3,3 @@ pulp
 openpyxl
 streamlit
 altair<5
-pyarrow==14.0.2
