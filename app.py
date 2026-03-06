@@ -15,7 +15,7 @@ def create_sample_data():
         "Fibre": [0.001,0.005,0.003,0.10,0.15,0.028,0.085],
         "Salt": [0.002,0.005,0.007,0.002,0.008,0.000,0.001],
         "Sugar": [0.000,0.000,0.000,0.000,0.000,0.045,0.047],
-    }).with_columns(pl.all().cast(pl.Utf8))
+    }).with_columns(pl.all().cast(pl.String))
 
     costs = {
         "Chicken":"0.095",
@@ -90,9 +90,9 @@ cost_file = st.sidebar.file_uploader("Upload Cost Excel",type=["xlsx"])
 
 if nutrition_file and cost_file:
 
-    nutrition = pl.read_excel(nutrition_file).with_columns(pl.all().cast(pl.Utf8))
+    nutrition = pl.read_excel(nutrition_file).with_columns(pl.all().cast(pl.String))
 
-    costs_df = pl.read_excel(cost_file).with_columns(pl.all().cast(pl.Utf8))
+    costs_df = pl.read_excel(cost_file).with_columns(pl.all().cast(pl.String))
 
     dict_costs = dict(
         zip(
@@ -118,7 +118,7 @@ st.dataframe(nutrition)
 cost_df = pl.DataFrame({
     "Ingredient":list(dict_costs.keys()),
     "Cost":list(dict_costs.values())
-}).with_columns(pl.all().cast(pl.Utf8))
+}).with_columns(pl.all().cast(pl.String))
 
 st.subheader("Ingredient Costs ($/gram)")
 st.dataframe(cost_df)
@@ -182,7 +182,7 @@ if st.button("Run Optimization"):
                     "Cost":str(round(qty*float(dict_costs[ing]),4))
                 })
 
-        results_df = pl.DataFrame(results).with_columns(pl.all().cast(pl.Utf8))
+        results_df = pl.DataFrame(results).with_columns(pl.all().cast(pl.String))
 
         st.subheader("Optimal Recipe")
         st.dataframe(results_df)
@@ -206,7 +206,7 @@ if st.button("Run Optimization"):
         nutrition_df = pl.DataFrame({
             "Nutrient":list(nutrition_totals.keys()),
             "Total (g)":list(nutrition_totals.values())
-        }).with_columns(pl.all().cast(pl.Utf8))
+        }).with_columns(pl.all().cast(pl.String))
 
         st.subheader("Nutritional Profile")
         st.dataframe(nutrition_df)
@@ -245,6 +245,6 @@ if st.button("Run Sensitivity Analysis"):
             "Status":str(status)
         })
 
-    sensitivity_df = pl.DataFrame(results).with_columns(pl.all().cast(pl.Utf8))
+    sensitivity_df = pl.DataFrame(results).with_columns(pl.all().cast(pl.String))
 
     st.dataframe(sensitivity_df)
