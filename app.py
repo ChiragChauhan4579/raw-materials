@@ -113,7 +113,7 @@ else:
 # DISPLAY DATA
 # -----------------------------
 st.subheader("Nutrition Data")
-st.dataframe(nutrition.to_pandas())
+st.dataframe(nutrition)
 
 cost_df = pl.DataFrame({
     "Ingredient":list(dict_costs.keys()),
@@ -121,7 +121,7 @@ cost_df = pl.DataFrame({
 })
 
 st.subheader("Ingredient Costs ($/gram)")
-st.dataframe(cost_df.to_pandas())
+st.dataframe(cost_df)
 
 
 # -----------------------------
@@ -185,7 +185,7 @@ if st.button("Run Optimization"):
         results_df = pl.DataFrame(results)
 
         st.subheader("Optimal Recipe")
-        st.dataframe(results_df.to_pandas())
+        st.dataframe(results_df)
 
 
         # Nutrition totals
@@ -209,7 +209,7 @@ if st.button("Run Optimization"):
         })
 
         st.subheader("Nutritional Profile")
-        st.dataframe(nutrition_df.to_pandas())
+        st.dataframe(nutrition_df)
 
 
 # -----------------------------
@@ -247,4 +247,4 @@ if st.button("Run Sensitivity Analysis"):
 
     sensitivity_df = pl.DataFrame(results)
 
-    st.dataframe(sensitivity_df.to_pandas())
+    st.dataframe(sensitivity_df)
