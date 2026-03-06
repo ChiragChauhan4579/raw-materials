@@ -2,11 +2,23 @@ import streamlit as st
 import pandas as pd
 from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus, value
 
+# FIX 1 — disable arrow serialization (prevents LargeUtf8 error)
+st.set_option("dataFrameSerialization", "legacy")
+
+
+# -----------------------------
+# SAFE DATAFRAME DISPLAY
+# -----------------------------
+def show_df(df):
+    df = pd.DataFrame(df).copy()
+    st.dataframe(df)
+
 
 # -----------------------------
 # SAMPLE DATA
 # -----------------------------
 def create_sample_data():
+
     nutrition = pd.DataFrame({
         "Protein": [0.10, 0.20, 0.15, 0.00, 0.04, 0.033, 0.258],
         "Fat": [0.08, 0.10, 0.11, 0.01, 0.01, 0.013, 0.492],
@@ -39,15 +51,15 @@ def optimize_recipe(nutrition, dict_costs, bar_weight, constraints):
 
     x = LpVariable.dicts("qty", ingredients, lowBound=0)
 
-    model += lpSum([dict_costs[i] * x[i] for i in ingredients])
+    model += lpSum(dict_costs[i] * x[i] for i in ingredients)
 
-    model += lpSum([x[i] for i in ingredients]) == bar_weight
+    model += lpSum(x[i] for i in ingredients) == bar_weight
 
     for nutrient, (op, limit) in constraints.items():
 
-        nutrient_sum = lpSum([
+        nutrient_sum = lpSum(
             x[i] * nutrition.loc[i, nutrient] for i in ingredients
-        ])
+        )
 
         if op == ">=":
             model += nutrient_sum >= limit
@@ -71,6 +83,7 @@ while meeting nutritional constraints.
 """
 )
 
+
 # -----------------------------
 # FILE UPLOAD
 # -----------------------------
@@ -83,7 +96,6 @@ nutrition_file = st.sidebar.file_uploader(
 cost_file = st.sidebar.file_uploader(
     "Upload Cost Excel", type=["xlsx"]
 )
-
 
 if nutrition_file and cost_file:
 
@@ -104,11 +116,12 @@ else:
 # DISPLAY INPUT DATA
 # -----------------------------
 st.subheader("Nutrition Data (per gram)")
-st.dataframe(nutrition.astype(str))
+show_df(nutrition)
 
 cost_df = pd.DataFrame(dict_costs.items(), columns=["Ingredient", "Cost"])
+
 st.subheader("Ingredient Costs ($/gram)")
-st.dataframe(cost_df.astype(str))
+show_df(cost_df)
 
 
 # -----------------------------
@@ -153,11 +166,12 @@ if st.button("Run Optimization"):
 
         st.success(f"Optimal Cost per Bar: ${cost:.2f}")
 
-        # Recipe table
         results = []
 
         for ingredient in nutrition.index:
+
             qty = x[ingredient].varValue
+
             if qty and qty > 0.01:
                 results.append({
                     "Ingredient": ingredient,
@@ -168,7 +182,8 @@ if st.button("Run Optimization"):
         results_df = pd.DataFrame(results)
 
         st.subheader("Optimal Recipe")
-        st.dataframe(results_df.astype(str))
+        show_df(results_df)
+
 
         # -----------------------------
         # Nutrition Profile
@@ -191,7 +206,7 @@ if st.button("Run Optimization"):
             columns=["Nutrient", "Total (g)"]
         )
 
-        st.dataframe(nutrition_df.astype(str))
+        show_df(nutrition_df)
 
 
 # -----------------------------
@@ -229,4 +244,4 @@ if st.button("Run Sensitivity Analysis"):
 
     sensitivity_df = pd.DataFrame(results)
 
-    st.dataframe(sensitivity_df.astype(str))
+    show_df(sensitivity_df)
